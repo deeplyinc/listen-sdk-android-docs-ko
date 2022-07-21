@@ -1,7 +1,7 @@
 # 사운드 이벤트 분석
 
 Listen은 기본 분석, 비동기 분석, 배치 분석의 세 가지 방식의 사운드 이벤트 분석 방식을 제공합니다. 
-여기서는 이미 [설치](setup) 및 [녹음 기능 구현](audio-recording)을 완료했다고 가정하고 설명을 진행합니다. 
+여기서는 이미 [시작하기](getting-started) 및 [녹음 기능 구현](audio-recording)을 완료했다고 가정하고 설명을 진행합니다. 
 
 ```kotlin
 val listen = Listen(context)

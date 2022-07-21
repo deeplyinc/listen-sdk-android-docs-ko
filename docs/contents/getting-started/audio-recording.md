@@ -10,7 +10,7 @@ Listen SDK는 이 녹음 기능을 코틀린 코루틴을 이용해 더욱 쉽�
 
 `DeeplyRecorder`는 녹음 구현에 필요한 다양한 기능을 코틀린 코루틴을 이용해 손쉽게 AudioRecord를 사용할 수 있게 도와주는 디플리의 오픈소스 라이브러리로, Listen SDK에 기본적으로 포함되어 있습니다. 
 여기서는 이 `DeeplyRecorder`를 이용해 녹음 기능을 구현하는 방법을 소개합니다. 
-`DeeplyRecorder`에 대한 더 자세한 내용은 [공식 문서](https://audioutils-android.readthedocs.io)나 [GitHub 링크](https://github.com/deeplyinc/deeply-recorder-android)를 참고해주세요. 
+`DeeplyRecorder`에 대한 더 자세한 내용은 [공식 문서](https://deeply-recorder-android.readthedocs.io)나 [GitHub 링크](https://github.com/deeplyinc/deeply-recorder-android)를 참고해주세요. 
 
 
 ### 녹음 권한 요청
