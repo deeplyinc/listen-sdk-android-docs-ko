@@ -27,8 +27,7 @@ Listen을 이용한 다양한 안드로이드 앱 예제는 `공식 GitHub <http
    :caption: 개념 및 활용
 
    contents/advanced-topics/audio-sampling
-   contents/advanced-topics/background-recording
-
+   
 .. toctree::
    :maxdepth: 1
    :caption: 문제해결
