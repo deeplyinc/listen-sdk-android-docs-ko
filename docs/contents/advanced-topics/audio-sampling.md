@@ -110,7 +110,7 @@ recorder.start().collect { audioSamples ->
 Listen 사운드 이벤트 AI 분석 모델도 특정한 샘플링 비율 값에 맞추어 만들어졌습니다. 
 따라서 Listen 사운드 이벤트 AI 분석을 위해서는 미리 설정되어 있는 AI 모델의 샘플링 비율에 맞추어 녹음 기능도 구현되어야 합니다. 
 Listen SDK는 AI 모델의 샘플링 비율을 `getAudioParams()` 메소드를 이용해 제공합니다.
-만약 DeeplyRecorder 를 이용해 녹음 기능을 구현한다면 아래와 같이 사용할 수 있습니다. 
+만약 `DeeplyRecorder` 를 이용해 녹음 기능을 구현한다면 아래와 같이 사용할 수 있습니다. 
 
 ```
 val listen = Listen(this)

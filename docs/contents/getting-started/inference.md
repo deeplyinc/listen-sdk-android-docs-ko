@@ -47,6 +47,10 @@ listen.registerEvent("cough")
 
 분석 가능한 사운드 이벤트 리스트는 공식 문서 혹은 `getEventTypes()` 메소드를 통해 알 수 있습니다.
 
+```kotlin
+val eventTypes: List<String> = listen.getEventTypes()
+```
+
 
 ### 오디오 샘플 전달
 
