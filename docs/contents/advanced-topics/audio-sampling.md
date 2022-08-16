@@ -30,28 +30,38 @@
 
 안드로이드에서 녹음 기능은 마이크를 통해 수집된 오디오 샘플을 버퍼를 이용해 특정한 갯수만큼 읽어오는 방식으로 작동합니다. 
 
-예를 들어, 이론적으로는 동일한 10,000 Hz 샘플링 비율로 녹음을 하더라도 한 번에 한 개의 오디오 샘플을 읽어올 수도 있고, 1,000 개씩 묶어서 오디오 샘플을 읽어올 수도 있습니다. 
-만약 10,000 Hz 샘플링 비율로 녹음을 하고, 한 번에 1,000 개씩 오디오 샘플을 읽어온다면 우리는 0.1 초에 한 번씩 1,000 개의 새로운 오디오 샘플을 처리할 수 있는 셈입니다. 
+예를 들어, 이론적으로는 동일한 10,000 Hz 샘플링 비율로 녹음을 하더라도 한 번에 한 개의 오디오 샘플을 읽어올 수도 있고, 여러 개의 오디오 샘플을 읽어올 수도 있습니다. 
+만약 16,000 Hz 샘플링 비율로 녹음을 하고, 한 번에 1,600 개씩 오디오 샘플을 읽어온다면 우리는 0.1 초에 한 번씩 1,600 개의 새로운 오디오 샘플을 처리할 수 있는 셈입니다. 
 이를 구현한다면 아래와 같습니다. 
 
 ```kotlin
 // DeeplyRecorder
-
-
-// FIXME: this is impossible, just an example for explaining the concept
+val recorder = DeeplyRecorder(sampleRate = 16000, bufferSize = 1600)
+lifecycleOwner.launcu {
+    recorder.start().collect { audioSamples ->
+        runSomething() // called every 0.1 second, buffer contains 1,600 samples
+    }
+}
 ```
 
 ```kotlin
 // AudioRecord
+val SAMPLE_RATE = 16000
+val BUFFER_SIZE = 1600
 
-
-// FIXME: this is impossible, just an example for explaining the concept
+val buffer = ByteArray(BUFFER_SIZE)
+val record = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buffer.size)
+record.startRecording()
+while (true) {
+    val read = record.read(buffer, 0, buffer.size)
+    runSomething() // called every 0.1 second, buffer contains 1,600 samples
+}
 ```
 
-이렇게 하면 위의 `runSomething()` 함수는 1,000 개의 새로운 오디오 샘플이 버퍼에 모일 때마다, 즉 0.1초에 한 번씩 호출됩니다.
+이렇게 하면 위의 `runSomething()` 함수는 1,600 개의 새로운 오디오 샘플이 버퍼에 모일 때마다, 즉 0.1초에 한 번씩 호출됩니다.
 
 그렇다면 항상 최소한의 오디오 샘플을 가져오는 것이 가장 좋지 않을까요?
-만약 runSomething() 함수에서 UI를 업데이트 하는 작업을 실행할 경우, 위의 예시처럼 10,000 Hz 샘플링 비율에 1,000 버퍼 크기를 사용하면 0.1 초에 한 번씩 UI가 변화하게 만들 수 있지만, 버퍼 크기를 10 으로 사용하면 0.001 초에 한 번씩 UI가 변화하게 만들 수 있으니까요. 
+만약 runSomething() 함수에서 UI를 업데이트 하는 작업을 실행할 경우, 위의 예시처럼 16,000 Hz 샘플링 비율에 1,600 버퍼 크기를 사용하면 0.1 초에 한 번씩 UI가 변화하게 만들 수 있지만, 버퍼 크기를 10 으로 사용하면 0.001 초에 한 번씩 UI가 변화하게 만들 수 있으니까요. 
 만약 샘플링 비율을 1,000,000 Hz 로 설정하고, 버퍼 크기는 1로 설정할 수 있다면 소리에 따라 정말 빠르게 반응하는 기능을 만들 수 있겠네요!
 
 하지만 현실적으로는 그것이 불가능합니다. 
@@ -62,10 +72,18 @@ DeeplyRecorder 에서는 기본 값으로 최소 사이즈의 버퍼 크기를 �
 AudioRecord 는 객체를 생성할 때 먼저 `` 메소드를 통해 최소 버퍼 크기를 알아낸 후 이 값을 AudioRecord 생성자를 통해 설정해주어야 합니다.
 
 ```kotlin
+// DeeplyRecorder
+val recorder = DeeplyRecorder(sampleRate = 16000) // the buffer size will be set to the minimum size
+val bufferSize = recorder.getBufferSize() // if you want to know the buffer size
 ```
 
 ```kotlin
+// AudioRecord
+val SAMPLE_RATE = 16000
+val minBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
+val record = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBufferSize)
 ```
+
 
 
 ## 샘플링 비율로 시간 다루기
@@ -95,7 +113,7 @@ AudioRecord 는 객체를 생성할 때 먼저 `` 메소드를 통해 최소 버
 
 ```kotlin
 val sampleRate = 16000
-val recorder = DeeplyRecorder(bufferSize = 10 * 16000)
+val recorder = DeeplyRecorder(bufferSize = 10 * sampleRate)
 recorder.start().collect { audioSamples ->
     // audioSamples have 10 second length of audio samples
     buildWavFile(audioSamples)
@@ -110,14 +128,17 @@ recorder.start().collect { audioSamples ->
 Listen 사운드 이벤트 AI 분석 모델도 특정한 샘플링 비율 값에 맞추어 만들어졌습니다. 
 따라서 Listen 사운드 이벤트 AI 분석을 위해서는 미리 설정되어 있는 AI 모델의 샘플링 비율에 맞추어 녹음 기능도 구현되어야 합니다. 
 Listen SDK는 AI 모델의 샘플링 비율을 `getAudioParams()` 메소드를 이용해 제공합니다.
-만약 `DeeplyRecorder` 를 이용해 녹음 기능을 구현한다면 아래와 같이 사용할 수 있습니다. 
+만약 `DeeplyRecorder`를 이용해 녹음 기능을 구현하고 기본 추론 방식으로 사용한다면 아래와 같이 사용할 수 있습니다. 
 
-```
+```kotlin
 val listen = Listen(this)
 listen.init("SDK_KEY", "DPL FILE ASSETS PATH")
 
-val sampleRate = listen.getAudioParams().sampleRate
-val recorder = DeeplyRecorder(sampleRate = sampleRate)
+val audioParams = listen.getAudioParams()
+val recorder = DeeplyRecorder(
+    sampleRate = audioParams.sampleRate,
+    bufferSize = audioParams.inputSize
+)
 ```
 
 <!-- 
