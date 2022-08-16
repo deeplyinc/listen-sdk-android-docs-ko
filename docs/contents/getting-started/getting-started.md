@@ -66,7 +66,7 @@ listen.init("SDK KEY", "listen.dpl")
 하지만 Listen을 좀 더 안정적으로 활용하기 위해 아래의 몇 가지 사항을 함께 고려하는 것이 좋습니다. 
 
 
-### 블락킹 이슈
+### 스레드 블락킹 이슈
 
 `init()` 메소드는 내부적으로 SDK 인증, 딥러닝 모델 로딩 등 다양한 작업을 진행하는데, 디바이스의 성능과 네트워크 상태 등에 따라 이 과정에는 수 초의 시간이 걸릴 수 있습니다. 
 초기화 작업은 비동기가 아닌 동기 방식으로 진행되기 때문에 이 작업을 처리하는 동안 스레드는 블락킹될 수 있습니다. 
@@ -80,11 +80,7 @@ listen.init("SDK KEY", "listen.dpl")
 // process because it contains networking and file operations.
 // We recommend to call init() in other thread like the following code.
 lifecycleScope.launch(Dispatchers.Default) {
-    try {
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
-    } catch (e: ListenAuthException) {
-        e.printStackTrace()
-    }
+    listen.init("SDK KEY", "DPL FILE ASSETS PATH")
 }
 ```
 
