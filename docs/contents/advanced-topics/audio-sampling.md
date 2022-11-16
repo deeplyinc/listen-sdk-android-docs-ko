@@ -37,7 +37,7 @@
 ```kotlin
 // DeeplyRecorder
 val recorder = DeeplyRecorder(sampleRate = 16000, bufferSize = 1600)
-lifecycleOwner.launcu {
+lifecycleOwner.launch {
     recorder.start().collect { audioSamples ->
         runSomething() // called every 0.1 second, buffer contains 1,600 samples
     }
@@ -67,9 +67,9 @@ while (true) {
 하지만 현실적으로는 그것이 불가능합니다. 
 마이크의 특성에 따라 설정할 수 있는 샘플링 비율과 한 번에 가져올 수 있는 최소한의 샘플 갯수, 즉 최소 버퍼 크기가 정해져 있기 때문입니다. 
 
-그래서 특정한 샘플링 비율에서 최대한 빠르게 반응하도록 만드려면 버퍼 크기가 가능한 최소 사이즈가 되어야 합니다. 
-DeeplyRecorder 에서는 기본 값으로 최소 사이즈의 버퍼 크기를 선택하기 때문에 별도의 설정을 할 필요가 없습니다. 
-AudioRecord 는 객체를 생성할 때 먼저 `` 메소드를 통해 최소 버퍼 크기를 알아낸 후 이 값을 AudioRecord 생성자를 통해 설정해주어야 합니다.
+그래서 특정한 샘플링 비율에서 빠르게 반응하도록 만드려면 버퍼 크기가 가능한 작은 사이즈가 되어야 합니다. 
+DeeplyRecorder 에서는 기본 값으로 (2 * 최소 사이즈) 버퍼 크기를 선택하기 때문에 대부분의 경우 별도의 설정을 할 필요가 없습니다. 
+AudioRecord 는 객체를 생성할 때 먼저 `AudioRecord.getMinBufferSize()` 메소드를 통해 최소 버퍼 크기를 알아낸 후 이 값을 AudioRecord 생성자를 통해 설정해주어야 합니다.
 
 ```kotlin
 // DeeplyRecorder
@@ -123,6 +123,7 @@ recorder.start().collect { audioSamples ->
 이렇게 오디오 샘플의 갯수는 곧 시간을 의미한다는 점을 기억하면, 시간과 관련된 오디오 기능을 구현하실 때 큰 도움이 될 수 있습니다. 
 
 
+
 ## Listen 적용
 
 Listen 사운드 이벤트 AI 분석 모델도 특정한 샘플링 비율 값에 맞추어 만들어졌습니다. 
@@ -132,12 +133,12 @@ Listen SDK는 AI 모델의 샘플링 비율을 `getAudioParams()` 메소드를 �
 
 ```kotlin
 val listen = Listen(this)
-listen.init("SDK_KEY", "DPL FILE ASSETS PATH")
+listen.load("SDK_KEY", "DPL FILE ASSETS PATH")
 
 val audioParams = listen.getAudioParams()
 val recorder = DeeplyRecorder(
     sampleRate = audioParams.sampleRate,
-    bufferSize = audioParams.inputSize
+    bufferSize = audioParams.minInputSize
 )
 ```
 

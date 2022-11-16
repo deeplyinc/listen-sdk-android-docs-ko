@@ -5,9 +5,9 @@ Listen은 기본 분석, 비동기 분석, 배치 분석의 세 가지 방식의
 
 ```kotlin
 val listen = Listen(context)
-listen.initialze("SDK_KEY", "MODEL_ASSETS_PATH")
+listen.load("SDK_KEY", "MODEL_ASSETS_PATH")
 
-val audioSamples = getAudioSamplesForMic() // get audio samples from mic using AudioRecord
+val audioSamples = getAudioSamplesForMic() // AudioRecord를 이용해 오디오 샘플을 얻는 함수
 ```
 
 
@@ -16,10 +16,9 @@ val audioSamples = getAudioSamplesForMic() // get audio samples from mic using A
 가장 간단하고 직관적인 방법은 기본 분석 방식입니다. 
 
 ```kotlin
-// audioSamples must have fixed (pre-defined) sample rate and input size, 
-// which is available from listen.getAudioParams().sampleRate and 
-// listen.getAudioParams().inputSize, respectively.
-val result = listen.analyze(audioSamples) 
+// audioSamples 변수는 반드시 미리 정해진 샘플링 속도로 녹음된 값이어야 하고, 최소 길이 제한보다 큰 길이를 가져야 합니다. 
+// 이 두 값은 각각 listen.getAudioParams().sampleRate, listen.getAudioParams().minInputSize 값을 통해 알 수 있습니다.
+val results = listen.inference(audioSamples) 
 ```
 
 기본 분석 기능을 제공하는 `analyze()` 함수는 미리 정해진 샘플링 속도로 녹음된 고정 길이의 오디오 샘플을 인자로 받습니다. 

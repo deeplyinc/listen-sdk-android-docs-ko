@@ -6,26 +6,44 @@ Listen SDK는 이 녹음 기능을 코틀린 코루틴을 이용해 더욱 쉽�
 
 
 
+## 녹음 권한 요청
+
+녹음 기능을 구현하기 전, 먼저 사용자에게 녹음 권한을 요청하는 기능을 아래와 같이 구현해야 합니다. 
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    // for RECORD_AUDIO permission request
+    private val requestRecordPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Audio recording permission is granted
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ...
+
+        val listen = Listen(this)
+        listen.load("SDK KEY", "DPL FILE ASSETS PATH")
+
+        // Request RECORD_AUDIO permission
+        requestRecordPermission.launch(Manifest.permission.RECORD_AUDIO)
+    }
+}
+```
+
+
+
+
 ## DeeplyRecorder
 
 `DeeplyRecorder`는 녹음 구현에 필요한 다양한 기능을 코틀린 코루틴을 이용해 손쉽게 AudioRecord를 사용할 수 있게 도와주는 디플리의 오픈소스 라이브러리로, Listen SDK에 기본적으로 포함되어 있습니다. 
 여기서는 이 `DeeplyRecorder`를 이용해 녹음 기능을 구현하는 방법을 소개합니다. 
 `DeeplyRecorder`에 대한 더 자세한 내용은 [공식 문서](https://deeply-recorder-android.readthedocs.io)나 [GitHub 링크](https://github.com/deeplyinc/deeply-recorder-android)를 참고해주세요. 
 
-
-### 녹음 권한 요청
-
-`RECORD_AUDIO` 권한은 사용자의 개인정보와 관련된 민감한 권한으로, 안드로이드 프레임워크에서 위험한 권한으로 분류됩니다. 
-이런 위험한 권한의 경우에는 `AndroidManifest.xml` 파일에 권한 선언을 해놓았더라도 추가적으로 앱이 실행되는 동안에 사용자로부터 실시간으로 권한 사용 허가를 받아야 합니다. 
-Listen SDK를 사용하면 아래와 같은 방식으로 사용자에게 녹음 권한을 손쉽게 요청, 처리할 수 있습니다. 
-
-```kotlin
-DeeplyRecorder.requestAudioPermission() { isGranted ->
-    if (isGranted) {
-        // RECORD_AUDIO permission is granted
-    }
-}
-```
 
 ### 녹음 기능 구현
 
@@ -47,35 +65,6 @@ recorder.start().collect { audioSamples ->
 
 
 ## AudioRecord
-
-### 녹음 권한 요청
-
-녹음 기능을 구현하기 전, 먼저 사용자에게 녹음 권한을 요청하는 기능을 아래와 같이 구현해야 합니다. 
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-
-    // for RECORD_AUDIO permission request
-    private val requestRecordPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // Audio recording permission is granted
-        }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        ...
-
-        val listen = Listen(this)
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
-
-        // Request RECORD_AUDIO permission
-        requestRecordPermission.launch(Manifest.permission.RECORD_AUDIO)
-    }
-}
-```
 
 ### 녹음 기능 구현
 
@@ -100,7 +89,7 @@ class MainActivity : AppCompatActivity() {
         ...
 
         val listen = Listen(this)
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
+        listen.load("SDK KEY", "DPL FILE ASSETS PATH")
 
         requestPermission.launch(Manifest.permission.RECORD_AUDIO)
     }

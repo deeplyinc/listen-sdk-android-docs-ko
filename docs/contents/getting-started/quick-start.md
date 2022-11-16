@@ -11,6 +11,7 @@ Listen SDK는 사운드 이벤트 분석에 필요한 모든 기능을 손쉽게
 여기서는 라이센스를 구매하면 제공되는 SDK 키와 `.dpl` 파일을 이미 보유하고 있다고 가정하겠습니다. 
 
 
+
 ## 종속성 추가
 
 모듈 레벨 `build.gradle` 파일에 아래와 같은 라인을 추가합니다. 
@@ -18,6 +19,7 @@ Listen SDK는 사운드 이벤트 분석에 필요한 모든 기능을 손쉽게
 ```groovy
 implementation "com.deeplyinc.listen.sdk:listen:VERSION"
 ```
+
 
 
 ## 권한 추가
@@ -29,6 +31,7 @@ Listen을 사용하기 위해서는 `RECORD_AUDIO` 권한과 `INTERNET` 권한�
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 ```
+
 
 
 ## Listen 초기화
@@ -45,13 +48,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         ... 
 
-        // Initialize Listen with SDK key and .dpl file
+        // 이 예제 코드는 Listen SDK를 사용하는 방법을 빠르게 이해하기 위한 것입니다.
+        // .dpl 파일이 크면 모델을 불러오는 데 시간이 오래 걸리므로 실제로 사용할 때는 메인 스레드가 아닌 다른 스레드에서 load() 메서드를 사용하는 것이 좋습니다.
         listen = Listen(this)
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
+        listen.load("SDK KEY", "DPL ASSET PATH")
     }
 }
 
 ```
+
 
 
 ## 오디오 녹음
@@ -63,6 +68,19 @@ Listen의 사운드 분석 기능을 사용하기 위해서는 녹음 기능을 
 
 녹음 기능을 구현하기 전, 먼저 사용자에게 녹음 권한을 요청하는 기능을 아래와 같이 구현해야 합니다. 
 
+```xml
+<!-- AndroidManifest.xml -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- RECORD_AUDIO 권한 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    ...
+
+</manifest>
+```
+
 ```kotlin
 class MainActivity : AppCompatActivity() {
 
@@ -73,14 +91,19 @@ class MainActivity : AppCompatActivity() {
         ...
 
         listen = Listen(this)
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
+        listen.load("SDK KEY", "DPL ASSET PATH")
 
-        // request audio recording permission
-        DeeplyRecorder.requestAudioPermission() { isGranted ->
+        // 녹음 권한을 요청합니다
+        requestRecordingPermission()
+    }
+
+    private fun requestRecordingPermission() {
+        val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                // RECORD_AUDIO permission is granted
+                Log.d(TAG, "Recording permission is granted")
             }
         }
+        permissionRequest.launch(Manifest.permission.RECORD_AUDIO)
     }
 }
 ```
@@ -98,28 +121,37 @@ class MainActivity : AppCompatActivity() {
         ...
 
         listen = Listen(this)
-        listen.init("SDK KEY", "DPL FILE ASSETS PATH")
+        listen.load("SDK KEY", "DPL ASSET PATH")
 
-        DeeplyRecorder.requestAudioPermission() { isGranted ->
+        requestRecordingPermission()
+    }
+
+    private fun requestRecordingPermission() {
+        val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                // start recording if the user grants the permission
+                Log.d(TAG, "Recording permission is granted")
+                
+                // 사용자가 권한을 허용하면 녹음을 시작합니다
                 startRecording()
             }
         }
+        permissionRequest.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     private fun startRecording() {
         val sampleRate = listen.getAudioParams().sampleRate
+        val minInputSize = listen.getAudioParams().minInputSize
         val recorder = DeeplyRecorder(
             sampleRate = sampleRate,
-            bufferSize = sampleRate
+            bufferSize = minInputSize
         )
         recorder.start().collect { audioSamples ->
-            // recording started!
+            // 녹음이 시작되었습니다!
         }
     }
 }
 ```
+
 
 
 ## 사운드 분석
@@ -130,14 +162,23 @@ Listen 사운드 이벤트 분석을 시작하려면 녹음을 시작한 후, �
 Listen 이 제공하는 다양한 분석 방식에 대한 자세한 설명은 [사운드 이벤트 분석](inference) 문서를 참조해주세요.
 
 ```kotlin
-recorder.start().collect { audioSamples ->
-    val result = listen.inference(audioSamples)
-    Log.d("Listen", result)
+private fun startRecording() {
+    val sampleRate = listen.getAudioParams().sampleRate
+    val minInputSize = listen.getAudioParams().minInputSize
+    val recorder = DeeplyRecorder(
+        sampleRate = sampleRate,
+        bufferSize = minInputSize
+    )
+    recorder.start().collect { audioSamples ->
+        val results = listen.inference(audioSamples)
+        // 분석 결과
+        Log.d("Listen", results)
+    }
 }
 ```
 
 분석이 완료되었습니다! 
-이제 실시간으로 녹음된 데이터가 `audioSamples` 값을 통해 계속 들어오고, 이 값을 `inference()` 함수에 전달하여 그 결과를 `result` 변수를 통해 확인할 수 있습니다!
+이제 실시간으로 녹음된 데이터가 `audioSamples` 값을 통해 계속 들어오고, 이 값을 `inference()` 함수에 전달하여 그 결과를 `results` 변수를 통해 확인할 수 있습니다!
 
 이제 이 분석 결과로 여러분의 앱을 더욱 훌륭하게 만드는 일만 남았습니다. 
 
